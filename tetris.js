@@ -6,6 +6,13 @@ const COLOUR_RED_DARK 					= "#880000";
 const SHAPE_SIZE						= 4;
 const BORDER_SIZE						= 2;
 
+const ROTATION_ENUM						= {
+												NONE 	: 0,
+												RIGHT	: 1,
+												DOWN	: 2,
+												LEFT	: 3,
+};
+
 const TETRIS_SHAPE_O					= [ 	[ 0, 0, 0, 0 ],
 												[ 0, 1, 1, 0 ],
 												[ 0, 1, 1, 0 ],
@@ -103,7 +110,32 @@ function drawGridSquareNested( x, y, colourOutter, colourInner )
 
 // drawGridSquareNested( 3, 2, COLOUR_RED, COLOUR_RED_DARK );
 
-function drawShape( xPos, yPos, theShape, colourOutter, colourInner ) {
+
+function shapeRotate( theShape, x, y, rotation ) {
+
+	switch( rotation )
+	{
+		case ROTATION_ENUM.NONE:
+		{
+			return theShape[y][x];
+		}
+		case ROTATION_ENUM.RIGHT:
+		{
+			return theShape[x][y];
+		}
+		case ROTATION_ENUM.DOWN:
+		{
+			return theShape[SHAPE_SIZE-(y+1)][x];
+		}
+		case ROTATION_ENUM.LEFT:
+		{
+			return theShape[SHAPE_SIZE-(x+1)][SHAPE_SIZE-(y+1)];
+		}
+	}
+}
+
+
+function drawShape( xPos, yPos, theShape, rotation, colourOutter, colourInner ) {
 
 	var xDraw;
 	var yDraw;
@@ -112,7 +144,7 @@ function drawShape( xPos, yPos, theShape, colourOutter, colourInner ) {
 
 		for( var x = 0; x < SHAPE_SIZE; x++ ) {
 
-			if( theShape[y][x] == 0 )
+			if( shapeRotate( theShape, x, y, rotation ) == 0 )
 				continue;
 
 			xDraw = x + xPos;
@@ -125,7 +157,7 @@ function drawShape( xPos, yPos, theShape, colourOutter, colourInner ) {
 
 }
 
-drawShape( 0, 0, TETRIS_SHAPE_T, COLOUR_RED, COLOUR_RED_DARK );
+drawShape( 0, 0, TETRIS_SHAPE_T, ROTATION_ENUM.LEFT, COLOUR_RED, COLOUR_RED_DARK );
 
 
 
