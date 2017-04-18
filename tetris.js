@@ -168,7 +168,9 @@ function drawSquareNested( x, y, size, border, colour )
 function drawGridSquareNested( x, y, colour )
 {
 	x *= SQUARE_SIZE;
+	y = GRID_SIZE_Y - (y+1);
 	y *= SQUARE_SIZE;
+
 
 	drawSquareNested( x, y, SQUARE_SIZE, BORDER_SIZE, colour, colour );
 }
@@ -267,10 +269,17 @@ var Key = {
 
 function nextRotation() {
 
-	Player.rotation = Player.rotation + 1;
+	var newRotation = Player.rotation + 1;
 
-	if( Player.rotation >= Object.keys(ROTATION_ENUM).length )
-		Player.rotation = 0;
+	if( newRotation >= Object.keys(ROTATION_ENUM).length )
+		newRotation = 0;
+
+	if( validMove( Player.shape, newRotation, Player.xShape, Player.yShape ) == false ) {
+		console.lot("nextRotation: can't rotate here!");
+		return;
+	}
+
+	Player.rotation = newRotation;
 
 	// console.log("Current rotation: " + Player.rotation);
 }
@@ -287,21 +296,73 @@ function keyDown() {
 
 //	console.log( "KeyDown" );
 	
+	var yNew = Player.yShape-1;
+//	console.log( "KeyLeft" );
+	if( validMove( Player.shape, Player.rotation, Player.xShape, yNew ) == false )
+		return;
+
+	Player.yShape = yNew;
+
 	gameDraw();
+}
+
+function validMove( shape, rotation, xPos, yPos ) {
+
+	var xDraw;
+	var yDraw;
+
+	// console.log( "colour: " + colour );
+
+	for( var y = 0; y < SHAPE_SIZE; y++ ) {
+
+		for( var x = 0; x < SHAPE_SIZE; x++ ) {
+
+			if( shapeRotate( shape, x, y, rotation ) == 0 )
+				continue;
+
+			xDraw = x + xPos;
+			yDraw = y + yPos;
+
+			if( xDraw < 0 ) {
+				console.log("Off left!");
+				return false;
+			}
+
+			if( xDraw >= GRID_SIZE_X ) {
+				console.log("Off right!");
+				return false;
+			}
+
+			if( yDraw < 0 ) {
+				console.log("Off bottom!");
+				return false;
+			}
+		}
+	}
+
+	return true;
 }
 
 function keyLeft() {
 
+	var xNew = Player.xShape-1;
 //	console.log( "KeyLeft" );
-	Player.xShape--;
+	if( validMove( Player.shape, Player.rotation, xNew, Player.yShape ) == false )
+		return;
+
+	Player.xShape = xNew;
 
 	gameDraw();
 }
 
 function keyRight() {
 
-//	console.log( "KeyRight" );
-	Player.xShape++;	
+	var xNew = Player.xShape+1;
+//	console.log( "keyRight" );
+	if( validMove( Player.shape, Player.rotation, xNew, Player.yShape ) == false )
+		return;
+
+	Player.xShape = xNew;
 
 	gameDraw();
 }
@@ -342,14 +403,14 @@ function updateFromKeypress() {
 	// if (Key.isDown(Key.UP))
 	// 		keyUp();
 
-	// if (Key.isDown(Key.LEFT))
-	// 		keyLeft();
+	if (Key.isDown(Key.LEFT))
+			keyLeft();
 
 	if (Key.isDown(Key.DOWN))
 			keyDown();
 
-	// if (Key.isDown(Key.RIGHT))
-	// 		keyRight();
+	if (Key.isDown(Key.RIGHT))
+			keyRight();
 
 
 };
@@ -427,6 +488,8 @@ function pickRandomShape() {
 
 function resetShapePosition() {
 
+	Player.xShape = Math.floor( GRID_SIZE_X / 2 );
+	Player.yShape = GRID_SIZE_Y - SHAPE_SIZE;
 }
 
 function resetShape()
