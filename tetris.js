@@ -1,7 +1,5 @@
 
 const SQUARE_SIZE 						= 16;
-const COLOUR_RED 						= "#FF0000";
-const COLOUR_RED_DARK 					= "#880000";
 
 const SHAPE_SIZE						= 4;
 const BORDER_SIZE						= 2;
@@ -65,6 +63,40 @@ const TETRIS_SHAPES						= [		TETRIS_SHAPE_O,
 ];
 
 
+const COLOUR_RED 						= { 	LIGHT			: "#FF0000",
+												DARK 			: "#880000"
+}
+
+const COLOUR_GREEN						= { 	LIGHT			: "#00FF00",
+												DARK 			: "#008800"
+}
+
+const COLOUR_BLUE 						= { 	LIGHT			: "#0000FF",
+												DARK 			: "#000088"
+}
+
+const COLOUR_YELLOW 					= { 	LIGHT			: "#FFFF00",
+												DARK 			: "#888800"
+}
+
+const COLOUR_TURQUOISE					= { 	LIGHT			: "#00FFFF",
+												DARK 			: "#008888"
+}
+
+const COLOUR_PURPLE 					= { 	LIGHT			: "#FF00FF",
+												DARK 			: "#880088"
+}
+
+const COLOURS 							= [		COLOUR_RED,
+												COLOUR_GREEN,
+												COLOUR_BLUE,
+												COLOUR_YELLOW,
+												COLOUR_TURQUOISE,
+												COLOUR_PURPLE
+];
+
+
+
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
 
@@ -91,24 +123,24 @@ function drawGridSquare( x, y, colour )
 
 }
 
-function drawSquareNested( x, y, size, border, colourOutter, colourInner )
+function drawSquareNested( x, y, size, border, colour )
 {
-	drawSquare( x, y, size, colourOutter );
+	drawSquare( x, y, size, colour.LIGHT );
 	x += border;
 	y += border;
-	drawSquare( x, y, size-(border*2), colourInner );
+	drawSquare( x, y, size-(border*2), colour.DARK );
 
 }
 
-function drawGridSquareNested( x, y, colourOutter, colourInner )
+function drawGridSquareNested( x, y, colour )
 {
 	x *= SQUARE_SIZE;
 	y *= SQUARE_SIZE;
 
-	drawSquareNested( x, y, SQUARE_SIZE, BORDER_SIZE, colourOutter, colourInner );
+	drawSquareNested( x, y, SQUARE_SIZE, BORDER_SIZE, colour, colour );
 }
 
-// drawGridSquareNested( 3, 2, COLOUR_RED, COLOUR_RED_DARK );
+// drawGridSquareNested( 3, 2, COLOUR_RED.LIGHT, COLOUR_RED.DARK );
 
 
 function shapeRotate( theShape, x, y, rotation ) {
@@ -135,7 +167,7 @@ function shapeRotate( theShape, x, y, rotation ) {
 }
 
 
-function drawShape( xPos, yPos, theShape, rotation, colourOutter, colourInner ) {
+function drawShape( xPos, yPos, theShape, rotation, colour ) {
 
 	var xDraw;
 	var yDraw;
@@ -150,14 +182,14 @@ function drawShape( xPos, yPos, theShape, rotation, colourOutter, colourInner ) 
 			xDraw = x + xPos;
 			yDraw = y + yPos;
 
-			drawGridSquareNested( xDraw, yDraw, colourOutter, colourInner );
+			drawGridSquareNested( xDraw, yDraw, colour );
 
 		}
 	}
 
 }
 
-drawShape( 0, 0, TETRIS_SHAPE_T, ROTATION_ENUM.LEFT, COLOUR_RED, COLOUR_RED_DARK );
+drawShape( 0, 0, TETRIS_SHAPE_T, ROTATION_ENUM.LEFT, COLOUR_PURPLE );
 
 
 
