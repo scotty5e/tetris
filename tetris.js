@@ -8,7 +8,7 @@ const ROTATION_ENUM						= {
 												NONE 	: 0,
 												RIGHT	: 1,
 												DOWN	: 2,
-												LEFT	: 3,
+												LEFT	: 3
 };
 
 const TETRIS_SHAPE_O					= [ 	[ 0, 0, 0, 0 ],
@@ -96,25 +96,37 @@ const COLOURS 							= [		COLOUR_RED,
 												COLOUR_BLUE,
 												COLOUR_YELLOW,
 												COLOUR_TURQUOISE,
-												COLOUR_PURPLE
+												COLOUR_PURPLE												
 ];
 
 const GAME_FPS 							= 25;
 
-
-
 const GRID_SIZE_X						= 15;
 const GRID_SIZE_Y						= 30;
 
-var xShape								= 0;
-var yShape								= 0;
-var rotation 							= ROTATION_ENUM.NONE;
-	
-var canvas = document.getElementById("myCanvas");
-var ctx = canvas.getContext("2d");
 
-function drawPlaySpace()
-{
+var Player								= {
+											xShape					: 0,
+											yShape					: 0,
+											rotation 				: ROTATION_ENUM.NONE,
+											shapeColour				: COLOUR_RED
+
+}
+	
+var canvas 								= document.getElementById("myCanvas");
+var ctx 								= canvas.getContext("2d");
+
+function drawPlaySpaceBackground() {
+
+	ctx.beginPath();
+	ctx.rect( 0, 0, GRID_SIZE_X * SQUARE_SIZE, GRID_SIZE_Y * SQUARE_SIZE);
+	ctx.fillStyle = COLOUR_WHITE;
+	ctx.fill();
+	ctx.closePath();
+
+}
+
+function drawPlaySpaceFrame() {
 	ctx.beginPath();
 	ctx.rect( 0, 0, GRID_SIZE_X * SQUARE_SIZE, GRID_SIZE_Y * SQUARE_SIZE);
 	ctx.stroke();
@@ -192,6 +204,8 @@ function drawShape( xPos, yPos, theShape, rotation, colour ) {
 	var xDraw;
 	var yDraw;
 
+	// console.log( "colour: " + colour );
+
 	for( var y = 0; y < SHAPE_SIZE; y++ ) {
 
 		for( var x = 0; x < SHAPE_SIZE; x++ ) {
@@ -209,6 +223,7 @@ function drawShape( xPos, yPos, theShape, rotation, colour ) {
 
 }
 
+
 var Key = {
 			_pressed: {},
 
@@ -216,13 +231,32 @@ var Key = {
 			UP: 38,
 			RIGHT: 39,
 			DOWN: 40,
+			SPACE: 32,
+			RETURN: 13,
+
+			keyDownHandler: undefined,
 
 			isDown: function(keyCode) {
 				return this._pressed[keyCode];
 			},
 
 			onKeydown: function(event) {
+
+				// SJL: Note: Only do this on the first keydown, not on the typematic repeat signal
+				if( this._pressed[event.keyCode] != true ) {
+
+					try { 
+							keyDownHandler( event.keyCode );
+					}
+					catch( e ) {
+
+					}
+
+				}
+
+
 				this._pressed[event.keyCode] = true;
+
 			},
 
 			onKeyup: function(event) {
@@ -230,47 +264,86 @@ var Key = {
 			}
 };
 
+function nextRotation() {
+
+	Player.rotation = Player.rotation + 1;
+
+	if( Player.rotation >= Object.keys(ROTATION_ENUM).length )
+		Player.rotation = 0;
+
+	// console.log("Current rotation: " + Player.rotation);
+}
 
 function keyUp() {
 
-	console.log( "KeyUp" );
+//	console.log( "KeyUp" );
+	nextRotation();
 
+	gameDraw();
 }
 
 function keyDown() {
 
-	console.log( "KeyDown" );
+//	console.log( "KeyDown" );
 	
+	gameDraw();
 }
 
 function keyLeft() {
 
-	console.log( "KeyLeft" );
-	xShape--;
+//	console.log( "KeyLeft" );
+	Player.xShape--;
+
+	gameDraw();
 }
 
 function keyRight() {
 
-	console.log( "KeyRight" );
-	xShape++;	
+//	console.log( "KeyRight" );
+	Player.xShape++;	
+
+	gameDraw();
 }
 
+function getRandomInt(min, max) {
+
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+
+}
+
+function keyDownHandler( keyCode ) {
+
+	console.log( "keyDownHandler keyCode: " + keyCode );
+
+	if( keyCode == Key.UP )
+		keyUp();
+
+	if( keyCode == Key.LEFT)
+		keyLeft();
+
+	if( keyCode == Key.DOWN)
+		keyDown();
+
+	if( keyCode == Key.RIGHT)
+		keyRight();
+
+}
 
 function updateFromKeypress() {
 
 //	console.log("updateFromKeypress");
 
-	if (Key.isDown(Key.UP))
-			keyUp();
+	// if (Key.isDown(Key.UP))
+	// 		keyUp();
 
-	if (Key.isDown(Key.LEFT))
-			keyLeft();
+	// if (Key.isDown(Key.LEFT))
+	// 		keyLeft();
 
 	if (Key.isDown(Key.DOWN))
 			keyDown();
 
-	if (Key.isDown(Key.RIGHT))
-			keyRight();
+	// if (Key.isDown(Key.RIGHT))
+	// 		keyRight();
 
 
 };
@@ -283,13 +356,17 @@ function gameUpdate() {
 
 }
 
+
+
 function gameDraw() {
 
 //	console.log("gameDraw");
 
-	drawPlaySpace();
+	drawPlaySpaceBackground();
 
-	drawShape( xShape, yShape, TETRIS_SHAPE_T, ROTATION_ENUM.LEFT, COLOUR_PURPLE );
+	drawShape( Player.xShape, Player.yShape, TETRIS_SHAPE_T, Player.rotation, Player.shapeColour );
+
+	drawPlaySpaceFrame();
 
 }
 
@@ -321,18 +398,47 @@ function setFPS( newFPS ) {
 
 }
 
+function pickRandomColour() {
+
+	var index = getRandomInt( 0, COLOURS.length-1 );
+
+	Player.shapeColour = COLOURS[index];
+
+	// console.log( "pickRandomColour: " + index );
+	// console.log( "Player.shapeColour: " + Player.shapeColour );
+
+}
+
+function pickRandomShape() {
+
+}
+
+function resetShapePosition() {
+
+}
+
+function resetShape()
+{
+	pickRandomColour();
+	pickRandomShape();
+	resetShapePosition();
+
+}
 
 
 function gameStart() {
 
 	console.log("gameStart");
 
-	setFPS( 2 );
-
 	window.addEventListener('keyup', function(event) { Key.onKeyup(event); }, false);
 	window.addEventListener('keydown', function(event) { Key.onKeydown(event); }, false);
 
+	resetShape();
 
+	Key.keyDownHandler = keyDownHandler();
+
+	// SJL: notice: this will start updates! :)
+	setFPS( 2 );
 
 }
 
