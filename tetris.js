@@ -87,6 +87,10 @@ const COLOUR_PURPLE 					= { 	LIGHT			: "#FF00FF",
 												DARK 			: "#880088"
 }
 
+const COLOUR_WHITE 						= "#FFFFFF";
+
+const COLOUR_BLACK 						= "#000000";
+
 const COLOURS 							= [		COLOUR_RED,
 												COLOUR_GREEN,
 												COLOUR_BLUE,
@@ -95,10 +99,26 @@ const COLOURS 							= [		COLOUR_RED,
 												COLOUR_PURPLE
 ];
 
+const GAME_FPS 							= 25;
 
 
+
+const GRID_SIZE_X						= 15;
+const GRID_SIZE_Y						= 30;
+
+var xShape								= 0;
+var yShape								= 0;
+var rotation 							= ROTATION_ENUM.NONE;
+	
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
+
+function drawPlaySpace()
+{
+	ctx.beginPath();
+	ctx.rect( 0, 0, GRID_SIZE_X * SQUARE_SIZE, GRID_SIZE_Y * SQUARE_SIZE);
+	ctx.stroke();
+}
 
 function drawSquare( x, y, size, colour )
 {
@@ -189,9 +209,134 @@ function drawShape( xPos, yPos, theShape, rotation, colour ) {
 
 }
 
-drawShape( 0, 0, TETRIS_SHAPE_T, ROTATION_ENUM.LEFT, COLOUR_PURPLE );
+var Key = {
+			_pressed: {},
+
+			LEFT: 37,
+			UP: 38,
+			RIGHT: 39,
+			DOWN: 40,
+
+			isDown: function(keyCode) {
+				return this._pressed[keyCode];
+			},
+
+			onKeydown: function(event) {
+				this._pressed[event.keyCode] = true;
+			},
+
+			onKeyup: function(event) {
+				delete this._pressed[event.keyCode];
+			}
+};
+
+
+function keyUp() {
+
+	console.log( "KeyUp" );
+
+}
+
+function keyDown() {
+
+	console.log( "KeyDown" );
+	
+}
+
+function keyLeft() {
+
+	console.log( "KeyLeft" );
+	xShape--;
+}
+
+function keyRight() {
+
+	console.log( "KeyRight" );
+	xShape++;	
+}
+
+
+function updateFromKeypress() {
+
+//	console.log("updateFromKeypress");
+
+	if (Key.isDown(Key.UP))
+			keyUp();
+
+	if (Key.isDown(Key.LEFT))
+			keyLeft();
+
+	if (Key.isDown(Key.DOWN))
+			keyDown();
+
+	if (Key.isDown(Key.RIGHT))
+			keyRight();
+
+
+};
+
+function gameUpdate() {
+
+//	console.log("gameUpdate");
+
+	updateFromKeypress();
+
+}
+
+function gameDraw() {
+
+//	console.log("gameDraw");
+
+	drawPlaySpace();
+
+	drawShape( xShape, yShape, TETRIS_SHAPE_T, ROTATION_ENUM.LEFT, COLOUR_PURPLE );
+
+}
+
+function gameFrame() {
+
+//	console.log("gameFrame");
+
+	gameUpdate();
+	gameDraw();
+
+}
+
+function stopFPS() {
+
+	// To stop the game, use the following:
+	clearInterval( this._intervalId );
+	this._intervalId = undefined;
+}
+
+function setFPS( newFPS ) {
+
+	if( this._intervalId != false ){
+
+		stopFPS();
+
+	}
+
+	this._intervalId = setInterval( gameFrame, 1000 / newFPS );
+
+}
 
 
 
+function gameStart() {
+
+	console.log("gameStart");
+
+	setFPS( 2 );
+
+	window.addEventListener('keyup', function(event) { Key.onKeyup(event); }, false);
+	window.addEventListener('keydown', function(event) { Key.onKeydown(event); }, false);
+
+
+
+}
+
+
+gameStart();
 
 
