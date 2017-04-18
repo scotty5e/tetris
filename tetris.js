@@ -106,6 +106,7 @@ const GRID_SIZE_Y						= 30;
 
 
 var Player								= {
+											shape 					: TETRIS_SHAPE_T,
 											xShape					: 0,
 											yShape					: 0,
 											rotation 				: ROTATION_ENUM.NONE,
@@ -307,6 +308,11 @@ function keyRight() {
 
 function getRandomInt(min, max) {
 
+	if( max === undefined )
+	{
+		console.log( "getRandomInt: No max!");
+	}
+
     return Math.floor(Math.random() * (max - min + 1)) + min;
 
 }
@@ -364,7 +370,7 @@ function gameDraw() {
 
 	drawPlaySpaceBackground();
 
-	drawShape( Player.xShape, Player.yShape, TETRIS_SHAPE_T, Player.rotation, Player.shapeColour );
+	drawShape( Player.xShape, Player.yShape, Player.shape, Player.rotation, Player.shapeColour );
 
 	drawPlaySpaceFrame();
 
@@ -410,6 +416,12 @@ function pickRandomColour() {
 }
 
 function pickRandomShape() {
+
+	var index = getRandomInt( 0, TETRIS_SHAPES.length-1 );
+
+	Player.shape = TETRIS_SHAPES[index];
+
+	// console.log("Picked shape: " + index );
 
 }
 
