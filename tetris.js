@@ -281,7 +281,7 @@ var Key = {
 			SPACE: 32,
 			RETURN: 13,
 
-			keyDownHandler: undefined,
+			_keyDownHandler: undefined,
 
 			isDown: function(keyCode) {
 				return this._pressed[keyCode];
@@ -293,10 +293,10 @@ var Key = {
 				if( this._pressed[event.keyCode] != true ) {
 
 					try { 
-							keyDownHandler( event.keyCode );
+							this._keyDownHandler( event.keyCode );
 					}
 					catch( e ) {
-
+						console.log("No keydown handler: " + this._keyDownHandler);
 					}
 
 				}
@@ -481,7 +481,7 @@ function getRandomInt(min, max) {
 
 }
 
-function keyDownHandler( keyCode ) {
+function gameKeyDownHandler( keyCode ) {
 
 //	console.log( "keyDownHandler keyCode: " + keyCode );
 
@@ -869,7 +869,7 @@ function gameStart() {
 
 	resetShape();
 
-	Key.keyDownHandler = keyDownHandler();
+	Key._keyDownHandler = gameKeyDownHandler;
 
 	// SJL: notice: this will start updates! (as the state change moves us to the waiting state, setting the FPS
 	gameSetState( GAME_STATE_ENUM.PLAYING );
