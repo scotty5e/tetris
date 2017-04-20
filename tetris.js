@@ -293,6 +293,8 @@ var Key = {
 				if( this._pressed[event.keyCode] != true ) {
 
 					try { 
+							// SJL: goddamnit! I messed this up. First, I was shadowing a variable in the main class, bad idea to reuse the name
+							// secondly, I didn't realise that I needed to use "this" when in the context of an object. BUGGER.
 							this._keyDownHandler( event.keyCode );
 					}
 					catch( e ) {
@@ -481,21 +483,61 @@ function getRandomInt(min, max) {
 
 }
 
-function gameKeyDownHandler( keyCode ) {
+function gameKeyDownHandlerWaiting( keyCode ) {
 
-//	console.log( "keyDownHandler keyCode: " + keyCode );
+	console.log("gameKeyDownHandlerWaiting");
 
-	if( keyCode == Key.UP )
-		keyUp();
+	if( keyCode == Key.RETURN ) {
+		gameSetState( GAME_STATE_ENUM.PLAYING );
+	}
+	
+}
+
+function gameKeyDownHandlerPlaying( keyCode ) {
+
+	console.log("gameKeyDownHandler");
 
 	if( keyCode == Key.LEFT)
 		keyLeft();
 
 	if( keyCode == Key.DOWN)
 		keyDown();
-
+ 
 	if( keyCode == Key.RIGHT)
 		keyRight();
+
+	if( keyCode == Key.UP)
+		keyUp();
+
+}
+
+// function gameKeyDownHandlerGameOver( keyCode ) {
+
+// 	console.log("gameKeyDownHandlerGameOver");
+// }
+
+function gameKeyDownHandler( keyCode ) {
+
+//	console.log( "gameKeyDownHandler keyCode: " + keyCode );
+
+	switch( gameState )
+	{
+		case GAME_STATE_ENUM.WAITING:
+			gameKeyDownHandlerWaiting( keyCode );
+		break;
+
+		case GAME_STATE_ENUM.PLAYING:
+			gameKeyDownHandlerPlaying( keyCode );
+		break;
+
+		case GAME_STATE_ENUM.GAMEOVER:
+			gameKeyDownHandlerGameOver( keyCode );
+		break;
+
+		default:
+			// console.log("EEK! gameKeyDownHandler unhandled state: " + gameState);
+		break;
+	}
 
 }
 
@@ -514,7 +556,6 @@ function processKeys() {
 
 	// if (Key.isDown(Key.RIGHT))
 	// 		keyRight();
-
 
 };
 
@@ -718,6 +759,8 @@ function resetGrid() {
 
 }
 
+
+// SJL: just used for testing. and making pretty colours!
 function randomGrid() {
 
 	for( var y = 0; y < GRID_SIZE_Y; y++ ) {
@@ -823,6 +866,38 @@ function gameExitState( oldState ) {
 	console.log("exited state: " + oldState );
 }
 
+function gameSetStateWaiting() {
+
+	console.log("gameSetStateWaiting");
+
+	// SJL: just set full FPS
+	setFPS( GAME_FPS_MAX );
+
+}
+
+
+function gameSetStatePlaying() {
+
+	console.log("gameSetStatePlaying");
+
+	resetGrid();
+
+	resetShape();
+
+	// SJL: set the start speed
+	setFPS( GAME_FPS_MIN );
+
+}
+
+function gameSetStateGameOver() {
+
+	console.log("gameSetStateGameOver");
+
+	// SJL: just set full FPS
+	setFPS( GAME_FPS_MAX );
+
+}
+
 function gameSetState( newState ) {
 
 	console.log( "gameSetState: " + newState );
@@ -834,18 +909,15 @@ function gameSetState( newState ) {
 	switch( gameState )
 	{
 		case GAME_STATE_ENUM.WAITING:
-			// SJL: just set full FPS
-			setFPS( GAME_FPS_MAX );
+			gameSetStateWaiting();
 		break;
 
 		case GAME_STATE_ENUM.PLAYING:
-			// SJL: set the start speed
-			setFPS( GAME_FPS_MIN );
+			gameSetStatePlaying();
 		break;
 
 		case GAME_STATE_ENUM.GAMEOVER:
-			// SJL: back to full FPS
-			setFPS( GAME_FPS_MAX );
+			gameSetStateGameOver();
 		break;
 
 		default:
@@ -856,27 +928,25 @@ function gameSetState( newState ) {
 	console.log("Set state: " + gameState );
 }
 
-function gameStart() {
 
-	console.log("gameStart");
+function gameInit() {
+
+	console.log("gameInit");
 
 	window.addEventListener('keyup', function(event) { Key.onKeyup(event); }, false);
 	window.addEventListener('keydown', function(event) { Key.onKeydown(event); }, false);
+	Key._keyDownHandler = gameKeyDownHandler;
 
 	resetGrid();
 
-//	randomGrid();
-
 	resetShape();
 
-	Key._keyDownHandler = gameKeyDownHandler;
-
 	// SJL: notice: this will start updates! (as the state change moves us to the waiting state, setting the FPS
-	gameSetState( GAME_STATE_ENUM.PLAYING );
+	gameSetState( GAME_STATE_ENUM.WAITING );
 
 }
 
 
-gameStart();
+gameInit();
 
 
