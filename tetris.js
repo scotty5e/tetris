@@ -1,5 +1,5 @@
 
-const SQUARE_SIZE 						= 16;
+const SQUARE_SIZE 						= 32;
 
 const SHAPE_SIZE						= 4;
 const BORDER_SIZE						= 2;
@@ -11,16 +11,25 @@ const ROTATION_ENUM						= {
 												LEFT	: 3
 };
 
+const GAME_STATE_ENUM					= {
+												NONE		: 0,
+												WAITING		: 1,
+												PLAYING		: 2,
+												GAMEOVER 	: 3,
+};
+
+var gameState 							= GAME_STATE_ENUM.NONE;
+
 const TETRIS_SHAPE_O					= [ 	[ 0, 0, 0, 0 ],
 												[ 0, 1, 1, 0 ],
 												[ 0, 1, 1, 0 ],
 												[ 0, 0, 0, 0 ],
 ];
 
-const TETRIS_SHAPE_I					= [ 	[ 0, 0, 0, 0 ],
-												[ 0, 1, 1, 0 ],
-												[ 0, 1, 1, 0 ],
-												[ 0, 0, 0, 0 ],
+const TETRIS_SHAPE_I					= [ 	[ 0, 1, 0, 0 ],
+												[ 0, 1, 0, 0 ],
+												[ 0, 1, 0, 0 ],
+												[ 0, 1, 0, 0 ],
 ];
 
 const TETRIS_SHAPE_S					= [ 	[ 0, 0, 0, 0 ],
@@ -62,6 +71,7 @@ const TETRIS_SHAPES						= [		TETRIS_SHAPE_O,
 												TETRIS_SHAPE_T,
 ];
 
+const GRID_EMPTY						= -1;
 
 const COLOUR_RED 						= { 	LIGHT			: "#FF0000",
 												DARK 			: "#880000"
@@ -89,6 +99,8 @@ const COLOUR_PURPLE 					= { 	LIGHT			: "#FF00FF",
 
 const COLOUR_WHITE 						= "#FFFFFF";
 
+const COLOUR_LIGHT_GREY 				= "#CCCCCC";
+
 const COLOUR_BLACK 						= "#000000";
 
 const COLOURS 							= [		COLOUR_RED,
@@ -99,10 +111,11 @@ const COLOURS 							= [		COLOUR_RED,
 												COLOUR_PURPLE												
 ];
 
-const GAME_FPS 							= 25;
+const GAME_FPS_MAX 						= 25;
+const GAME_FPS_MIN 						= 2;
 
-const GRID_SIZE_X						= 15;
-const GRID_SIZE_Y						= 30;
+const GRID_SIZE_X						= 10;
+const GRID_SIZE_Y						= 16;
 
 
 var Player								= {
@@ -113,9 +126,40 @@ var Player								= {
 											shapeColour				: COLOUR_RED
 
 }
+
+var GameGrid = createArray( GRID_SIZE_Y, GRID_SIZE_X );
 	
 var canvas 								= document.getElementById("myCanvas");
 var ctx 								= canvas.getContext("2d");
+
+const STATUS_TEXT_READY					= "Ready to play!";
+const STATUS_TEXT_PLAYING				= "PLAY SOME TETRIS!";
+const STATUS_TEXT_GAMEOVER				= "GAME OVER!";
+
+var removeLines 						= [];
+
+function createArray(length) {
+
+    var arr = new Array(length || 0),
+        i = length;
+
+    if (arguments.length > 1) {
+        var args = Array.prototype.slice.call(arguments, 1);
+        while(i--) arr[length-1 - i] = createArray.apply(this, args);
+    }
+
+    return arr;
+}
+
+function drawCanvasBackground() {
+
+	ctx.beginPath();
+	ctx.rect( 0, 0, canvas.width, canvas.height );
+	ctx.fillStyle = COLOUR_LIGHT_GREY;
+	ctx.fill();
+	ctx.closePath();
+
+}
 
 function drawPlaySpaceBackground() {
 
@@ -172,7 +216,7 @@ function drawGridSquareNested( x, y, colour )
 	y *= SQUARE_SIZE;
 
 
-	drawSquareNested( x, y, SQUARE_SIZE, BORDER_SIZE, colour, colour );
+	drawSquareNested( x, y, SQUARE_SIZE, BORDER_SIZE, colour );
 }
 
 // drawGridSquareNested( 3, 2, COLOUR_RED.LIGHT, COLOUR_RED.DARK );
@@ -188,15 +232,15 @@ function shapeRotate( theShape, x, y, rotation ) {
 		}
 		case ROTATION_ENUM.RIGHT:
 		{
-			return theShape[x][y];
+			return theShape[x][SHAPE_SIZE-(y+1)];
 		}
 		case ROTATION_ENUM.DOWN:
 		{
-			return theShape[SHAPE_SIZE-(y+1)][x];
+			return theShape[SHAPE_SIZE-(y+1)][SHAPE_SIZE-(x+1)];
 		}
 		case ROTATION_ENUM.LEFT:
 		{
-			return theShape[SHAPE_SIZE-(x+1)][SHAPE_SIZE-(y+1)];
+			return theShape[SHAPE_SIZE-(x+1)][y];
 		}
 	}
 }
@@ -281,7 +325,24 @@ function nextRotation() {
 
 	Player.rotation = newRotation;
 
-	// console.log("Current rotation: " + Player.rotation);
+	console.log("Current rotation: " + Player.rotation);
+}
+
+function prevRotation() {
+
+	var newRotation = Player.rotation - 1;
+
+	if( newRotation < 0 )
+		newRotation = Object.keys(ROTATION_ENUM).length;
+
+	if( validMove( Player.shape, newRotation, Player.xShape, Player.yShape ) == false ) {
+		console.lot("nextRotation: can't rotate here!");
+		return;
+	}
+
+	Player.rotation = newRotation;
+
+	console.log("Current rotation: " + Player.rotation);
 }
 
 function keyUp() {
@@ -292,18 +353,55 @@ function keyUp() {
 	gameDraw();
 }
 
-function keyDown() {
+function writeShape() {
 
-//	console.log( "KeyDown" );
-	
+	for( var y = 0; y < SHAPE_SIZE; y++ ) {
+
+		for( var x = 0; x < SHAPE_SIZE; x++ ) {
+
+			if( shapeRotate( Player.shape, x, y, Player.rotation ) == 0 )
+				continue;
+
+			xDraw = x + Player.xShape;
+			yDraw = y + Player.yShape;
+
+			GameGrid[yDraw][xDraw] = Player.shapeColour;
+		}
+	}
+
+	scanForRemoveLines();
+	processRemoveLines();
+
+	resetShape();
+
+	gameDraw();
+
+	// console.log( "GameGrid: " + GameGrid );
+}
+
+function moveDown() {
+
 	var yNew = Player.yShape-1;
 //	console.log( "KeyLeft" );
-	if( validMove( Player.shape, Player.rotation, Player.xShape, yNew ) == false )
+	if( validMove( Player.shape, Player.rotation, Player.xShape, yNew ) == false ) {
+
+		writeShape();
+
 		return;
+	}
 
 	Player.yShape = yNew;
 
 	gameDraw();
+
+}
+
+function keyDown() {
+
+//	console.log( "KeyDown" );
+
+	moveDown();
+	
 }
 
 function validMove( shape, rotation, xPos, yPos ) {
@@ -335,6 +433,11 @@ function validMove( shape, rotation, xPos, yPos ) {
 
 			if( yDraw < 0 ) {
 				console.log("Off bottom!");
+				return false;
+			}
+
+			if( GameGrid[yDraw][xDraw] >= 0 ) {
+				console.log("Grid collide");
 				return false;
 			}
 		}
@@ -380,7 +483,7 @@ function getRandomInt(min, max) {
 
 function keyDownHandler( keyCode ) {
 
-	console.log( "keyDownHandler keyCode: " + keyCode );
+//	console.log( "keyDownHandler keyCode: " + keyCode );
 
 	if( keyCode == Key.UP )
 		keyUp();
@@ -396,42 +499,137 @@ function keyDownHandler( keyCode ) {
 
 }
 
-function updateFromKeypress() {
+function processKeys() {
 
-//	console.log("updateFromKeypress");
+//	console.log("processKeys");
 
 	// if (Key.isDown(Key.UP))
 	// 		keyUp();
 
-	if (Key.isDown(Key.LEFT))
-			keyLeft();
+	// if (Key.isDown(Key.LEFT))
+	// 		keyLeft();
 
-	if (Key.isDown(Key.DOWN))
-			keyDown();
+	// if (Key.isDown(Key.DOWN))
+	// 		keyDown();
 
-	if (Key.isDown(Key.RIGHT))
-			keyRight();
+	// if (Key.isDown(Key.RIGHT))
+	// 		keyRight();
 
 
 };
+
+function gameUpdatePlaying() {
+
+	console.log("gameUpdatePlaying");
+
+	processKeys();
+}
+
+function gameUpdateWaiting() {
+
+	console.log("GAME_STATE_ENUM.WAITING");
+
+}
+
+function gameUpdateGameOver() {
+
+	console.log("GAME_STATE_ENUM.GAMEOVER");
+
+}
 
 function gameUpdate() {
 
 //	console.log("gameUpdate");
 
-	updateFromKeypress();
+	switch( gameState )
+	{
+		case GAME_STATE_ENUM.WAITING:
+			// SJL: Nothing for now... but if a keypress comes in, we can change state...
+			gameUpdateWaiting();
+		break;
+
+		case GAME_STATE_ENUM.PLAYING:
+			// SJL: do the main update loop
+			gameUpdatePlaying();
+		break;
+
+		case GAME_STATE_ENUM.GAMEOVER:
+			// SJL: Nothing for now... but if a keypress comes in, we can change state...
+			gameUpdateGameOver();
+		break;
+
+		default:
+			console.log("EEK! gameUpdate unhandled state: " + gameState);
+		break;
+	}
+
+}
+
+function drawGameGrid() {
+
+	for( var y = 0; y < GRID_SIZE_Y; y++ ) {
+
+		for( var x = 0; x < GRID_SIZE_X; x++ ) {
+
+			if( GameGrid[y][x] < 0 )
+				continue;
+
+			drawGridSquareNested( x, y, COLOURS[GameGrid[y][x]] );
+		}
+	}
 
 }
 
 
+function drawStatusText() {
+
+	ctx.font = "20px Arial";
+	ctx.fillStyle = "black";
+	ctx.textAlign="center";
+
+	var xCen = GRID_SIZE_X * SQUARE_SIZE;
+	xCen /= 2;
+
+	var yPos = (GRID_SIZE_Y + 1) * SQUARE_SIZE;
+
+	ctx.textBaseline="center"; 
+
+	var useText;
+
+	switch( gameState )
+	{
+		case GAME_STATE_ENUM.WAITING:
+			useText = STATUS_TEXT_READY;
+		break;
+		case GAME_STATE_ENUM.PLAYING:
+			useText = STATUS_TEXT_PLAYING;
+		break;
+		case GAME_STATE_ENUM.GAMEOVER:
+			useText = STATUS_TEXT_GAMEOVER;
+		break;
+		default:
+			console.log("drawStatusText: unhandled state: " + gameState );
+			useText = "unhandled: " + gameState;
+		break;
+	}
+
+	ctx.fillText( useText, xCen, yPos);
+
+}
 
 function gameDraw() {
 
 //	console.log("gameDraw");
 
+	drawCanvasBackground();
+
 	drawPlaySpaceBackground();
 
-	drawShape( Player.xShape, Player.yShape, Player.shape, Player.rotation, Player.shapeColour );
+	drawGameGrid();
+
+	drawShape( Player.xShape, Player.yShape, Player.shape, Player.rotation, COLOURS[Player.shapeColour] );
+
+	drawStatusText();
 
 	drawPlaySpaceFrame();
 
@@ -465,13 +663,20 @@ function setFPS( newFPS ) {
 
 }
 
-function pickRandomColour() {
+function getRandomColour() {
 
 	var index = getRandomInt( 0, COLOURS.length-1 );
 
-	Player.shapeColour = COLOURS[index];
+	return index;
 
-	// console.log( "pickRandomColour: " + index );
+}
+
+function pickRandomColour() {
+
+	var index = getRandomColour();
+
+	Player.shapeColour = index;
+
 	// console.log( "Player.shapeColour: " + Player.shapeColour );
 
 }
@@ -500,6 +705,156 @@ function resetShape()
 
 }
 
+function resetGrid() {
+
+	for( var y = 0; y < GRID_SIZE_Y; y++ ) {
+
+		for( var x = 0; x < GRID_SIZE_X; x++ ) {
+
+			GameGrid[y][x] = GRID_EMPTY;
+
+		}
+	}
+
+}
+
+function randomGrid() {
+
+	for( var y = 0; y < GRID_SIZE_Y; y++ ) {
+
+		for( var x = 0; x < GRID_SIZE_X; x++ ) {
+
+			GameGrid[y][x] = getRandomColour();
+
+		}
+	}
+
+}
+
+
+function gridLineFull( y ) {
+
+	for( var x = 0; x < GRID_SIZE_X; x++ ) {
+
+		if( GameGrid[y][x] < 0 )
+			return false;
+	}
+
+	return true;
+}
+
+function scanForRemoveLines() {
+
+	console.log("scanForRemoveLines: ");
+
+	for( var y = 0; y < GRID_SIZE_Y; y++ ) {
+
+		if( gridLineFull( y ) == false )
+			continue;
+
+		removeLines.push( y );
+	}
+
+	console.log("Got lines to remove: " + removeLines );
+}
+
+function addNewLineToTopOfGameGrid() {
+		
+	var newLine = [];
+
+	for( var x = 0; x < GRID_SIZE_X; x++ ) {
+
+		newLine.push( GRID_EMPTY );
+
+	}
+
+	GameGrid.push( newLine );
+
+}
+
+function removeLineFromGameGrid( y ) {
+
+	GameGrid.splice( y, 1 );
+
+}
+
+function processRemoveLines() {
+
+	var removed = 0;
+
+	for( var i = 0; i < removeLines.length; i++ ) {
+
+		removeLineFromGameGrid( removeLines[i] - removed );
+
+		addNewLineToTopOfGameGrid();
+
+		removed++;
+	}
+
+	// SJL: Assume we've processed all full lines and now we can dump the list
+	removeLines = [];
+
+	console.log("Removed " + removed + " lines.");
+}
+
+function gameExitState( oldState ) {
+
+	console.log( "gameExitState: " + oldState );
+
+	switch( oldState )
+	{
+		case GAME_STATE_ENUM.WAITING:
+			// SJL: nothing for now
+		break;
+
+		case GAME_STATE_ENUM.PLAYING:
+			// SJL: nothing for now
+		break;
+
+		case GAME_STATE_ENUM.GAMEOVER:
+			// SJL: nothing for now
+		break;
+
+		default:
+			console.log("EEK! gameExitState unhandled state: " + oldState);
+		break;
+	}
+
+	console.log("exited state: " + oldState );
+}
+
+function gameSetState( newState ) {
+
+	console.log( "gameSetState: " + newState );
+
+	gameExitState( gameState );
+
+	gameState = newState;
+
+	switch( gameState )
+	{
+		case GAME_STATE_ENUM.WAITING:
+			// SJL: just set full FPS
+			setFPS( GAME_FPS_MAX );
+		break;
+
+		case GAME_STATE_ENUM.PLAYING:
+			// SJL: set the start speed
+			setFPS( GAME_FPS_MIN );
+		break;
+
+		case GAME_STATE_ENUM.GAMEOVER:
+			// SJL: back to full FPS
+			setFPS( GAME_FPS_MAX );
+		break;
+
+		default:
+			console.log("EEK! gameSetState unhandled state: " + gameState);
+		break;
+	}
+
+	console.log("Set state: " + gameState );
+}
 
 function gameStart() {
 
@@ -508,12 +863,16 @@ function gameStart() {
 	window.addEventListener('keyup', function(event) { Key.onKeyup(event); }, false);
 	window.addEventListener('keydown', function(event) { Key.onKeydown(event); }, false);
 
+	resetGrid();
+
+//	randomGrid();
+
 	resetShape();
 
 	Key.keyDownHandler = keyDownHandler();
 
-	// SJL: notice: this will start updates! :)
-	setFPS( 2 );
+	// SJL: notice: this will start updates! (as the state change moves us to the waiting state, setting the FPS
+	gameSetState( GAME_STATE_ENUM.PLAYING );
 
 }
 
