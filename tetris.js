@@ -572,6 +572,8 @@ function gameUpdatePlaying() {
 	console.log("gameUpdatePlaying");
 
 	processKeys();
+
+	moveDown();
 }
 
 function gameUpdateWaiting() {
