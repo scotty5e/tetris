@@ -487,8 +487,10 @@ function gameKeyDownHandlerWaiting( keyCode ) {
 
 	console.log("gameKeyDownHandlerWaiting");
 
-	if( keyCode == Key.RETURN ) {
+	if( keyCode == Key.RETURN  || keyCode == Key.SPACE ) {
+
 		gameSetState( GAME_STATE_ENUM.PLAYING );
+
 	}
 	
 }
@@ -511,10 +513,16 @@ function gameKeyDownHandlerPlaying( keyCode ) {
 
 }
 
-// function gameKeyDownHandlerGameOver( keyCode ) {
+function gameKeyDownHandlerGameOver( keyCode ) {
 
-// 	console.log("gameKeyDownHandlerGameOver");
-// }
+	console.log("gameKeyDownHandlerGameOver");
+
+	if( keyCode == Key.RETURN  || keyCode == Key.SPACE ) {
+	
+		gameSetState( GAME_STATE_ENUM.WAITING );
+	
+	}
+}
 
 function gameKeyDownHandler( keyCode ) {
 
@@ -734,8 +742,16 @@ function pickRandomShape() {
 
 function resetShapePosition() {
 
-	Player.xShape = Math.floor( GRID_SIZE_X / 2 );
+	Player.xShape = Math.floor( (GRID_SIZE_X - SHAPE_SIZE) / 2 );
 	Player.yShape = GRID_SIZE_Y - SHAPE_SIZE;
+}
+
+function gameTestGameOver() {
+
+	if( validMove( Player.shape, Player.rotation, Player.xShape, Player.yShape ) == false ) {
+
+		gameSetState( GAME_STATE_ENUM.GAMEOVER );
+	}
 }
 
 function resetShape()
@@ -743,6 +759,9 @@ function resetShape()
 	pickRandomColour();
 	pickRandomShape();
 	resetShapePosition();
+
+	// SJL: and, at this point, we could well be about to die!
+	gameTestGameOver();
 
 }
 
