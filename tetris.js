@@ -1,5 +1,5 @@
 
-define ( [ "shapes" ], function( shapes ) {
+define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
 
 	var tetris = function( ) {
 
@@ -89,7 +89,7 @@ define ( [ "shapes" ], function( shapes ) {
 
 		}
 
-		var GameGrid = createArray(GRID_SIZE_Y, GRID_SIZE_X);
+		// var GameGrid = createArray(GRID_SIZE_Y, GRID_SIZE_X);
 
 		var canvas = document.getElementById("myCanvas");
 		var ctx = canvas.getContext("2d");
@@ -99,19 +99,6 @@ define ( [ "shapes" ], function( shapes ) {
 		const STATUS_TEXT_GAMEOVER = "GAME OVER!";
 
 		var removeLines = [];
-
-		function createArray(length) {
-
-			var arr = new Array(length || 0),
-				i = length;
-
-			if (arguments.length > 1) {
-				var args = Array.prototype.slice.call(arguments, 1);
-				while (i--) arr[length - 1 - i] = createArray.apply(this, args);
-			}
-
-			return arr;
-		}
 
 		function drawCanvasBackground() {
 
@@ -320,7 +307,7 @@ define ( [ "shapes" ], function( shapes ) {
 					xDraw = x + Player.xShape;
 					yDraw = y + Player.yShape;
 
-					GameGrid[yDraw][xDraw] = Player.shapeColour;
+                    gameGrid.Grid[yDraw][xDraw] = Player.shapeColour;
 				}
 			}
 
@@ -331,7 +318,7 @@ define ( [ "shapes" ], function( shapes ) {
 
 			gameDraw();
 
-			// console.log( "GameGrid: " + GameGrid );
+			// console.log( "gameGrid.Grid: " + gameGrid.Grid );
 		}
 
 		function moveDown() {
@@ -391,7 +378,7 @@ define ( [ "shapes" ], function( shapes ) {
 						return false;
 					}
 
-					if (GameGrid[yDraw][xDraw] >= 0) {
+					if (gameGrid.Grid[yDraw][xDraw] >= 0) {
 						console.log("Grid collide");
 						return false;
 					}
@@ -572,10 +559,10 @@ define ( [ "shapes" ], function( shapes ) {
 
 				for (var x = 0; x < GRID_SIZE_X; x++) {
 
-					if (GameGrid[y][x] < 0)
+					if (gameGrid.Grid[y][x] < 0)
 						continue;
 
-					drawGridSquareNested(x, y, COLOURS[GameGrid[y][x]]);
+					drawGridSquareNested(x, y, COLOURS[gameGrid.Grid[y][x]]);
 				}
 			}
 
@@ -721,7 +708,7 @@ define ( [ "shapes" ], function( shapes ) {
 
 				for (var x = 0; x < GRID_SIZE_X; x++) {
 
-					GameGrid[y][x] = GRID_EMPTY;
+                    gameGrid.Grid[y][x] = GRID_EMPTY;
 
 				}
 			}
@@ -736,7 +723,7 @@ define ( [ "shapes" ], function( shapes ) {
 
 				for (var x = 0; x < GRID_SIZE_X; x++) {
 
-					GameGrid[y][x] = getRandomColour();
+                    gameGrid.Grid[y][x] = getRandomColour();
 
 				}
 			}
@@ -748,7 +735,7 @@ define ( [ "shapes" ], function( shapes ) {
 
 			for (var x = 0; x < GRID_SIZE_X; x++) {
 
-				if (GameGrid[y][x] < 0)
+				if (gameGrid.Grid[y][x] < 0)
 					return false;
 			}
 
@@ -780,13 +767,13 @@ define ( [ "shapes" ], function( shapes ) {
 
 			}
 
-			GameGrid.push(newLine);
+            gameGrid.Grid.push(newLine);
 
 		}
 
 		function removeLineFromGameGrid(y) {
 
-			GameGrid.splice(y, 1);
+            gameGrid.Grid.splice(y, 1);
 
 		}
 
