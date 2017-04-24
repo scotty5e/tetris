@@ -2,7 +2,7 @@
  * Created by scottlamb on 24/04/2017.
  */
 
-define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
+define ( [ "shapes", "colours" ], function( shapes, colours ) {
 
     var player = function () {
 
@@ -14,11 +14,11 @@ define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
                                 LEFT    : 3,
             };
 
-            var shape           = shapes.TETRIS_SHAPE_T;
-            var xShape          = 0;
-            var yShape          = 0;
-            var rotation        = ROTATION_ENUM.NONE;
-            var shapeColour     = undefined;
+        var shape               = shapes.TETRIS_SHAPE_T;
+        var xShape              = 0;
+        var yShape              = 0;
+        var rotation            = ROTATION_ENUM.NONE;
+        var shapeColour         = colours.COLOUR_PAIR_RED;
 
         return {
                     shape       : shape,
@@ -26,11 +26,12 @@ define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
                     yShape      : yShape,
                     rotation    : rotation,
                     shapeColour : shapeColour,
-        }
-
-        return player();
+        };
 
     }
+
+    return player();
+
 })
 
 
