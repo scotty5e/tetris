@@ -7,6 +7,8 @@ define( function () {
 
     var gameGrid = function() {
 
+        const GRID_EMPTY = -1;
+
         function createArray(length) {
 
             var arr = new Array(length || 0),
@@ -27,7 +29,9 @@ define( function () {
 
         return {
                     Grid : Grid,
-
+                    GRID_SIZE_X: GRID_SIZE_X,
+                    GRID_SIZE_Y: GRID_SIZE_Y,
+                    GRID_EMPTY, GRID_EMPTY,
         }
     }
 

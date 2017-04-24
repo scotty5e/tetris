@@ -4,7 +4,7 @@ require.config( {
 
 } );
 
-require( [ "shapes", "tetris", "gameGrid" ], function( shapes, tetris, gameGrid ) {
+require( [ "shapes", "tetris", "gameGrid", "player", "colours" ], function(shapes, tetris, gameGrid, player, colours ) {
 
 // tetris().gameInit();
 

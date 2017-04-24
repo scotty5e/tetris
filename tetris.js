@@ -1,12 +1,11 @@
 
-define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
+define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGrid, player, colours ) {
 
 	var tetris = function( ) {
 
-		console.log(shapes);
+		console.log(colours);
 
 		const SQUARE_SIZE = 32;
-
 		const SHAPE_SIZE = 4;
 		const BORDER_SIZE = 2;
 
@@ -28,51 +27,6 @@ define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
 
 		const GRID_EMPTY = -1;
 
-		const COLOUR_PAIR_RED = {
-			LIGHT: "#FF0000",
-			DARK: "#880000"
-		}
-
-		const COLOUR_PAIR_GREEN = {
-			LIGHT: "#00FF00",
-			DARK: "#008800"
-		}
-
-		const COLOUR_PAIR_BLUE = {
-			LIGHT: "#0000FF",
-			DARK: "#000088"
-		}
-
-		const COLOUR_PAIR_YELLOW = {
-			LIGHT: "#FFFF00",
-			DARK: "#888800"
-		}
-
-		const COLOUR_PAIR_TURQUOISEE = {
-			LIGHT: "#00FFFF",
-			DARK: "#008888"
-		}
-
-		const COLOUR_PAIR_PURPLE = {
-			LIGHT: "#FF00FF",
-			DARK: "#880088"
-		}
-
-		const COLOUR_WHITE = "#FFFFFF";
-
-		const COLOUR_LIGHT_GREY = "#CCCCCC";
-
-		const COLOUR_BLACK = "#000000";
-
-		const COLOURS = [COLOUR_PAIR_RED,
-			COLOUR_PAIR_GREEN,
-			COLOUR_PAIR_BLUE,
-			COLOUR_PAIR_YELLOW,
-			COLOUR_PAIR_TURQUOISEE,
-			COLOUR_PAIR_PURPLE
-		];
-
-
 		const GAME_FPS_MAX = 25;
 		const GAME_FPS_MIN = 2;
 
@@ -85,7 +39,7 @@ define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
 			xShape: 0,
 			yShape: 0,
 			rotation: ROTATION_ENUM.NONE,
-			shapeColour: COLOUR_PAIR_RED
+			shapeColour: colours.COLOUR_PAIR_RED
 
 		}
 
@@ -104,7 +58,7 @@ define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
 
 			ctx.beginPath();
 			ctx.rect(0, 0, canvas.width, canvas.height);
-			ctx.fillStyle = COLOUR_LIGHT_GREY;
+			ctx.fillStyle = colours.COLOUR_LIGHT_GREY;
 			ctx.fill();
 			ctx.closePath();
 
@@ -114,7 +68,7 @@ define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
 
 			ctx.beginPath();
 			ctx.rect(0, 0, GRID_SIZE_X * SQUARE_SIZE, GRID_SIZE_Y * SQUARE_SIZE);
-			ctx.fillStyle = COLOUR_WHITE;
+			ctx.fillStyle = colours.COLOUR_WHITE;
 			ctx.fill();
 			ctx.closePath();
 
@@ -163,9 +117,6 @@ define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
 
 			drawSquareNested(x, y, SQUARE_SIZE, BORDER_SIZE, colour);
 		}
-
-	// drawGridSquareNested( 3, 2, COLOUR_PAIR_RED.LIGHT, COLOUR_PAIR_RED.DARK );
-
 
 		function shapeRotate(theShape, x, y, rotation) {
 
@@ -562,7 +513,7 @@ define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
 					if (gameGrid.Grid[y][x] < 0)
 						continue;
 
-					drawGridSquareNested(x, y, COLOURS[gameGrid.Grid[y][x]]);
+					drawGridSquareNested(x, y, colours.COLOURS[gameGrid.Grid[y][x]]);
 				}
 			}
 
@@ -614,7 +565,7 @@ define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
 
 			drawGameGrid();
 
-			drawShape(Player.xShape, Player.yShape, Player.shape, Player.rotation, COLOURS[Player.shapeColour]);
+			drawShape(Player.xShape, Player.yShape, Player.shape, Player.rotation, colours.COLOURS[Player.shapeColour]);
 
 			drawStatusText();
 
@@ -652,7 +603,7 @@ define ( [ "shapes", "gameGrid" ], function( shapes, gameGrid ) {
 
 		function getRandomColour() {
 
-			var index = getRandomInt(0, COLOURS.length - 1);
+			var index = getRandomInt(0, colours.COLOURS.length - 1);
 
 			return index;
 
