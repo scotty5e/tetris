@@ -9,13 +9,6 @@ define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGr
 		const SHAPE_SIZE = 4;
 		const BORDER_SIZE = 2;
 
-		const ROTATION_ENUM = {
-			NONE: 0,
-			RIGHT: 1,
-			DOWN: 2,
-			LEFT: 3
-		};
-
 		const GAME_STATE_ENUM = {
 			NONE: 0,
 			WAITING: 1,
@@ -109,16 +102,16 @@ define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGr
 		function shapeRotate(theShape, x, y, rotation) {
 
 			switch (rotation) {
-				case ROTATION_ENUM.NONE: {
+				case player.ROTATION_ENUM.NONE: {
 					return theShape[y][x];
 				}
-				case ROTATION_ENUM.RIGHT: {
+				case player.ROTATION_ENUM.RIGHT: {
 					return theShape[x][SHAPE_SIZE - (y + 1)];
 				}
-				case ROTATION_ENUM.DOWN: {
+				case player.ROTATION_ENUM.DOWN: {
 					return theShape[SHAPE_SIZE - (y + 1)][SHAPE_SIZE - (x + 1)];
 				}
-				case ROTATION_ENUM.LEFT: {
+				case player.ROTATION_ENUM.LEFT: {
 					return theShape[SHAPE_SIZE - (x + 1)][y];
 				}
 			}
@@ -177,7 +170,7 @@ define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGr
 						this._keyDownHandler(event.keyCode);
 					}
 					catch (e) {
-						console.log("No keydown handler: " + this._keyDownHandler);
+						console.log("Keydown handler exception: " + this._keyDownHandler);
 					}
 
 				}
@@ -192,44 +185,11 @@ define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGr
 			}
 		};
 
-		function nextRotation() {
-
-			var newRotation = player.rotation + 1;
-
-			if (newRotation >= Object.keys(ROTATION_ENUM).length)
-				newRotation = 0;
-
-			if (validMove(player.shape, newRotation, player.xShape, player.yShape) == false) {
-				console.lot("nextRotation: can't rotate here!");
-				return;
-			}
-
-			player.rotation = newRotation;
-
-			console.log("Current rotation: " + player.rotation);
-		}
-
-		function prevRotation() {
-
-			var newRotation = player.rotation - 1;
-
-			if (newRotation < 0)
-				newRotation = Object.keys(ROTATION_ENUM).length;
-
-			if (validMove(player.shape, newRotation, player.xShape, player.yShape) == false) {
-				console.lot("nextRotation: can't rotate here!");
-				return;
-			}
-
-			player.rotation = newRotation;
-
-			console.log("Current rotation: " + player.rotation);
-		}
 
 		function keyUp() {
 
 	//	console.log( "KeyUp" );
-			nextRotation();
+			player.nextRotation();
 
 			gameDraw();
 		}
@@ -246,7 +206,7 @@ define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGr
 					xDraw = x + player.xShape;
 					yDraw = y + player.yShape;
 
-                    gameGrid.Grid[yDraw][xDraw] = player.shapeColour;
+                    gameGrid.Grid[yDraw][xDraw] = player.colourIndex;
 				}
 			}
 
@@ -260,28 +220,12 @@ define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGr
 			// console.log( "gameGrid.Grid: " + gameGrid.Grid );
 		}
 
-		function moveDown() {
-
-			var yNew = player.yShape - 1;
-	//	console.log( "KeyLeft" );
-			if (validMove(player.shape, player.rotation, player.xShape, yNew) == false) {
-
-				writeShape();
-
-				return;
-			}
-
-			player.yShape = yNew;
-
-			gameDraw();
-
-		}
 
 		function keyDown() {
 
 	//	console.log( "KeyDown" );
 
-			moveDown();
+			player.moveDown();
 
 		}
 
@@ -329,24 +273,14 @@ define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGr
 
 		function keyLeft() {
 
-			var xNew = player.xShape - 1;
-	//	console.log( "KeyLeft" );
-			if (validMove(player.shape, player.rotation, xNew, player.yShape) == false)
-				return;
-
-			player.xShape = xNew;
+			player.moveLeft();
 
 			gameDraw();
 		}
 
 		function keyRight() {
 
-			var xNew = player.xShape + 1;
-	//	console.log( "keyRight" );
-			if (validMove(player.shape, player.rotation, xNew, player.yShape) == false)
-				return;
-
-			player.xShape = xNew;
+			player.moveRight();
 
 			gameDraw();
 		}
@@ -446,22 +380,22 @@ define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGr
 
 		function gameUpdatePlaying() {
 
-			console.log("gameUpdatePlaying");
+			// console.log("gameUpdatePlaying");
 
 			processKeys();
 
-			moveDown();
+//			moveDown();
 		}
 
 		function gameUpdateWaiting() {
 
-			console.log("GAME_STATE_ENUM.WAITING");
+			// console.log("GAME_STATE_ENUM.WAITING");
 
 		}
 
 		function gameUpdateGameOver() {
 
-			console.log("GAME_STATE_ENUM.GAMEOVER");
+			// console.log("GAME_STATE_ENUM.GAMEOVER");
 
 		}
 
@@ -553,7 +487,7 @@ define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGr
 
 			drawGameGrid();
 
-			drawShape(player.xShape, player.yShape, player.shape, player.rotation, colours.COLOURS[player.shapeColour]);
+			drawShape(player.xShape, player.yShape, player.shape, player.rotation, colours.COLOURS[player.colourIndex]);
 
 			drawStatusText();
 
@@ -601,9 +535,9 @@ define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGr
 
 			var index = getRandomColour();
 
-			player.shapeColour = index;
+			player.colourIndex = index;
 
-			// console.log( "player.shapeColour: " + player.shapeColour );
+			// console.log( "player.colourIndex: " + player.colourIndex );
 
 		}
 
@@ -653,22 +587,6 @@ define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGr
 			}
 
 		}
-
-
-	// SJL: just used for testing. and making pretty colours!
-		function randomGrid() {
-
-			for (var y = 0; y < GRID_SIZE_Y; y++) {
-
-				for (var x = 0; x < GRID_SIZE_X; x++) {
-
-                    gameGrid.Grid[y][x] = getRandomColour();
-
-				}
-			}
-
-		}
-
 
 		function gridLineFull(y) {
 
@@ -844,12 +762,13 @@ define ( [ "shapes", "gameGrid", "player", "colours" ], function( shapes, gameGr
 		}
 
 		return {
+						validMove				: validMove,
+            			gameInit 				: gameInit,
+            			gameDraw				: gameDraw,
+            			writeShape				: writeShape,
+		};
 
-			init : gameInit
-
-		}
-
-	}
+	};
 
 	return tetris();
 

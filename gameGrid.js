@@ -28,10 +28,10 @@ define( function () {
         var Grid = createArray(GRID_SIZE_Y, GRID_SIZE_X);
 
         return {
-                    Grid : Grid,
-                    GRID_SIZE_X: GRID_SIZE_X,
-                    GRID_SIZE_Y: GRID_SIZE_Y,
-                    GRID_EMPTY, GRID_EMPTY,
+                    Grid                : Grid,
+                    GRID_SIZE_X         : GRID_SIZE_X,
+                    GRID_SIZE_Y         : GRID_SIZE_Y,
+                    GRID_EMPTY          : GRID_EMPTY,
         }
     }
 

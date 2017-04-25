@@ -9,7 +9,7 @@ require( [ "shapes", "tetris", "gameGrid", "player", "colours" ], function(shape
 // tetris().gameInit();
 
 
-    console.log( tetris.init() );
+    console.log( tetris.gameInit() );
 
 
 })
